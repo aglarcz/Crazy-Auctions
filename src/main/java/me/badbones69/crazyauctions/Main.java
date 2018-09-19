@@ -15,6 +15,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.permissions.PermissionAttachmentInfo;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -41,7 +42,7 @@ public class Main extends JavaPlugin implements Listener {
 			saveDefaultConfig();
 		}
 		try {
-			MassiveStats massiveStats = new MassiveStats(this);
+			new MassiveStats(this);
 		}catch(Exception e) {
 		}
 		Messages.addMissingMessages();
@@ -244,20 +245,19 @@ public class Main extends JavaPlugin implements Listener {
 						}
 						if(!Files.CONFIG.getFile().getBoolean("Settings.Allow-Damaged-Items")) {
 							for(Material i : getDamageableItems()) {
-								if(item.getType() == i) {
-									if(item.getDurability() > 0) {
+								if(item.getType() == i && item.getItemMeta() instanceof Damageable) {
+									if(((Damageable) item.getItemMeta()).getDamage() > 0) {
 										player.sendMessage(Messages.ITEM_DAMAGED.getMessage());
 										return true;
 									}
 								}
 							}
 						}
-						String seller = player.getName();
 						int num = 1;
 						Random r = new Random();
 						for(; Files.DATA.getFile().contains("Items." + num); num++) ;
 						Files.DATA.getFile().set("Items." + num + ".Price", price);
-						Files.DATA.getFile().set("Items." + num + ".Seller", seller);
+						Files.DATA.getFile().set("Items." + num + ".Seller", player.getUniqueId().toString());
 						if(args[0].equalsIgnoreCase("Bid")) {
 							Files.DATA.getFile().set("Items." + num + ".Time-Till-Expire", Methods.convertToMill(Files.CONFIG.getFile().getString("Settings.Bid-Time")));
 						}else {
@@ -337,10 +337,10 @@ public class Main extends JavaPlugin implements Listener {
 		ma.add(Material.CHAINMAIL_CHESTPLATE);
 		ma.add(Material.CHAINMAIL_LEGGINGS);
 		ma.add(Material.CHAINMAIL_BOOTS);
-		ma.add(Material.GOLD_HELMET);
-		ma.add(Material.GOLD_CHESTPLATE);
-		ma.add(Material.GOLD_LEGGINGS);
-		ma.add(Material.GOLD_BOOTS);
+		ma.add(Material.GOLDEN_HELMET);
+		ma.add(Material.GOLDEN_CHESTPLATE);
+		ma.add(Material.GOLDEN_LEGGINGS);
+		ma.add(Material.GOLDEN_BOOTS);
 		ma.add(Material.IRON_HELMET);
 		ma.add(Material.IRON_CHESTPLATE);
 		ma.add(Material.IRON_LEGGINGS);
@@ -350,27 +350,27 @@ public class Main extends JavaPlugin implements Listener {
 		ma.add(Material.LEATHER_LEGGINGS);
 		ma.add(Material.LEATHER_BOOTS);
 		ma.add(Material.BOW);
-		ma.add(Material.WOOD_SWORD);
+		ma.add(Material.WOODEN_SWORD);
 		ma.add(Material.STONE_SWORD);
 		ma.add(Material.IRON_SWORD);
 		ma.add(Material.DIAMOND_SWORD);
-		ma.add(Material.WOOD_AXE);
+		ma.add(Material.WOODEN_AXE);
 		ma.add(Material.STONE_AXE);
 		ma.add(Material.IRON_AXE);
 		ma.add(Material.DIAMOND_AXE);
-		ma.add(Material.WOOD_PICKAXE);
+		ma.add(Material.WOODEN_PICKAXE);
 		ma.add(Material.STONE_PICKAXE);
 		ma.add(Material.IRON_PICKAXE);
 		ma.add(Material.DIAMOND_PICKAXE);
-		ma.add(Material.WOOD_AXE);
+		ma.add(Material.WOODEN_AXE);
 		ma.add(Material.STONE_AXE);
 		ma.add(Material.IRON_AXE);
 		ma.add(Material.DIAMOND_AXE);
-		ma.add(Material.WOOD_SPADE);
-		ma.add(Material.STONE_SPADE);
-		ma.add(Material.IRON_SPADE);
-		ma.add(Material.DIAMOND_SPADE);
-		ma.add(Material.WOOD_HOE);
+		ma.add(Material.WOODEN_SHOVEL);
+		ma.add(Material.STONE_SHOVEL);
+		ma.add(Material.IRON_SHOVEL);
+		ma.add(Material.DIAMOND_SHOVEL);
+		ma.add(Material.WOODEN_HOE);
 		ma.add(Material.STONE_HOE);
 		ma.add(Material.IRON_HOE);
 		ma.add(Material.DIAMOND_HOE);

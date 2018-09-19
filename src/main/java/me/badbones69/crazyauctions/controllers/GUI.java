@@ -23,8 +23,10 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public class GUI implements Listener {
@@ -42,6 +44,15 @@ public class GUI implements Listener {
 		Methods.updateAuction();
 		FileConfiguration config = Files.CONFIG.getFile();
 		FileConfiguration data = Files.DATA.getFile();
+		int sellcount = 0;
+		int expiredcount = 0;
+		for (String i : data.getConfigurationSection("Items").getKeys(false)) 
+			if (data.getString("Items." + i + ".Seller").equals(player.getUniqueId().toString())) 
+				sellcount++;
+
+		for (String i : data.getConfigurationSection("OutOfTime/Cancelled").getKeys(false)) 
+			if (data.getString("OutOfTime/Cancelled." + i + ".Seller").equals(player.getUniqueId().toString())) 
+				expiredcount++;
 		List<ItemStack> items = new ArrayList<>();
 		List<Integer> ID = new ArrayList<>();
 		if(!data.contains("Items")) {
@@ -59,7 +70,7 @@ public class GUI implements Listener {
 				if(cat.getItems().contains(data.getItemStack("Items." + i + ".Item").getType()) || cat == Category.NONE) {
 					if(data.getBoolean("Items." + i + ".Biddable")) {
 						if(sell == ShopType.BID) {
-							String seller = data.getString("Items." + i + ".Seller");
+							String seller = Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName();
 							String topbidder = data.getString("Items." + i + ".TopBidder");
 							for(String l : config.getStringList("Settings.GUISettings.Bidding")) {
 								lore.add(l.replaceAll("%TopBid%", Methods.getPrice(i, false)).replaceAll("%topbid%", Methods.getPrice(i, false)).replaceAll("%Seller%", seller).replaceAll("%seller%", seller).replaceAll("%TopBidder%", topbidder).replaceAll("%topbidder%", topbidder).replaceAll("%Time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))).replaceAll("%time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))));
@@ -70,7 +81,7 @@ public class GUI implements Listener {
 					}else {
 						if(sell == ShopType.SELL) {
 							for(String l : config.getStringList("Settings.GUISettings.SellingItemLore")) {
-								lore.add(l.replaceAll("%Price%", Methods.getPrice(i, false)).replaceAll("%price%", Methods.getPrice(i, false)).replaceAll("%Seller%", data.getString("Items." + i + ".Seller")).replaceAll("%seller%", data.getString("Items." + i + ".Seller")));
+								lore.add(l.replaceAll("%Price%", Methods.getPrice(i, false)).replaceAll("%price%", Methods.getPrice(i, false)).replaceAll("%Seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName()).replaceAll("%seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName()).replaceAll("%seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName()).replaceAll("%Time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))).replaceAll("%time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))));
 							}
 							items.add(Methods.addLore(data.getItemStack("Items." + i + ".Item").clone(), lore));
 							ID.add(data.getInt("Items." + i + ".StoreID"));
@@ -79,6 +90,8 @@ public class GUI implements Listener {
 				}
 			}
 		}
+		Collections.reverse(ID);
+		Collections.reverse(items);
 		int maxPage = Methods.getMaxPage(items);
 		for(; page > maxPage; page--) ;
 		Inventory inv = Bukkit.createInventory(null, 54, Methods.color(config.getString("Settings.GUIName") + " #" + page));
@@ -117,7 +130,7 @@ public class GUI implements Listener {
 			String cName = Methods.color(config.getString("Settings.GUISettings.Category-Settings." + Cat.get(player).getName() + ".Name"));
 			if(config.contains("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
 				for(String l : config.getStringList("Settings.GUISettings.OtherSettings." + o + ".Lore")) {
-					lore.add(l.replaceAll("%Category%", cName).replaceAll("%category%", cName));
+					lore.add(l.replaceAll("%Category%", cName).replaceAll("%category%", cName).replaceAll("%sellcount%", Integer.toString(sellcount)).replaceAll("%expiredcount%", Integer.toString(expiredcount)));
 				}
 				inv.setItem(slot - 1, Methods.makeItem(id, 1, name, lore));
 			}else {
@@ -194,7 +207,7 @@ public class GUI implements Listener {
 		}
 		if(data.contains("Items")) {
 			for(String i : data.getConfigurationSection("Items").getKeys(false)) {
-				if(data.getString("Items." + i + ".Seller").equalsIgnoreCase(player.getName())) {
+				if(data.getString("Items." + i + ".Seller").equalsIgnoreCase(player.getUniqueId().toString())) {
 					List<String> lore = new ArrayList<>();
 					for(String l : config.getStringList("Settings.GUISettings.CurrentLore")) {
 						lore.add(l.replaceAll("%Price%", Methods.getPrice(i, false)).replaceAll("%price%", Methods.getPrice(i, false)).replaceAll("%Time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))).replaceAll("%time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))));
@@ -221,7 +234,8 @@ public class GUI implements Listener {
 		List<Integer> ID = new ArrayList<>();
 		if(data.contains("OutOfTime/Cancelled")) {
 			for(String i : data.getConfigurationSection("OutOfTime/Cancelled").getKeys(false)) {
-				if(data.getString("OutOfTime/Cancelled." + i + ".Seller").equalsIgnoreCase(player.getName())) {
+				if(data.getString("OutOfTime/Cancelled." + i + ".Seller").equalsIgnoreCase(player.getUniqueId().toString())) {
+					System.out.println("checkpoint 2");
 					List<String> lore = new ArrayList<>();
 					for(String l : config.getStringList("Settings.GUISettings.Cancelled/ExpiredLore")) {
 						lore.add(l.replaceAll("%Price%", Methods.getPrice(i, true)).replaceAll("%price%", Methods.getPrice(i, true)).replaceAll("%Time%", Methods.convertToTime(data.getLong("OutOfTime/Cancelled." + i + ".Full-Time"))).replaceAll("%time%", Methods.convertToTime(data.getLong("OutOfTime/Cancelled." + i + ".Full-Time"))));
@@ -302,7 +316,7 @@ public class GUI implements Listener {
 		ItemStack item = data.getItemStack("Items." + ID + ".Item");
 		List<String> lore = new ArrayList<>();
 		for(String l : config.getStringList("Settings.GUISettings.SellingLore")) {
-			lore.add(l.replaceAll("%Price%", Methods.getPrice(ID, false)).replaceAll("%price%", Methods.getPrice(ID, false)).replaceAll("%Seller%", data.getString("Items." + ID + ".Seller")).replaceAll("%seller%", data.getString("Items." + ID + ".Seller")));
+			lore.add(l.replaceAll("%Price%", Methods.getPrice(ID, false)).replaceAll("%price%", Methods.getPrice(ID, false)).replaceAll("%Seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + ID + ".Seller"))).getName()).replaceAll("%seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + ID + ".Seller"))).getName()));
 		}
 		inv.setItem(4, Methods.addLore(item.clone(), lore));
 		IDs.put(player, ID);
@@ -347,10 +361,10 @@ public class GUI implements Listener {
 		}
 		if(data.contains("Items")) {
 			for(String i : data.getConfigurationSection("Items").getKeys(false)) {
-				if(data.getString("Items." + i + ".Seller").equalsIgnoreCase(other)) {
+				if(Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName().equalsIgnoreCase(other)) {
 					List<String> lore = new ArrayList<>();
 					if(data.getBoolean("Items." + i + ".Biddable")) {
-						String seller = data.getString("Items." + i + ".Seller");
+						String seller = Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName();
 						String topbidder = data.getString("Items." + i + ".TopBidder");
 						for(String l : config.getStringList("Settings.GUISettings.Bidding")) {
 							lore.add(l.replaceAll("%TopBid%", Methods.getPrice(i, false)).replaceAll("%topbid%", Methods.getPrice(i, false)).replaceAll("%Seller%", seller).replaceAll("%seller%", seller).replaceAll("%TopBidder%", topbidder).replaceAll("%topbidder%", topbidder).replaceAll("%Time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))).replaceAll("%time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))));
@@ -359,7 +373,7 @@ public class GUI implements Listener {
 						ID.add(data.getInt("Items." + i + ".StoreID"));
 					}else {
 						for(String l : config.getStringList("Settings.GUISettings.SellingItemLore")) {
-							lore.add(l.replaceAll("%Price%", Methods.getPrice(i, false)).replaceAll("%price%", Methods.getPrice(i, false)).replaceAll("%Seller%", data.getString("Items." + i + ".Seller")).replaceAll("%seller%", data.getString("Items." + i + ".Seller")));
+							lore.add(l.replaceAll("%Price%", Methods.getPrice(i, false)).replaceAll("%price%", Methods.getPrice(i, false)).replaceAll("%Seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName()).replaceAll("%seller%", Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName()).replaceAll("%Time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))).replaceAll("%time%", Methods.convertToTime(data.getLong("Items." + i + ".Time-Till-Expire"))));
 						}
 						items.add(Methods.addLore(data.getItemStack("Items." + i + ".Item").clone(), lore));
 						ID.add(data.getInt("Items." + i + ".StoreID"));
@@ -416,7 +430,7 @@ public class GUI implements Listener {
 	public static ItemStack getBiddingItem(Player player, String ID) {
 		FileConfiguration config = Files.CONFIG.getFile();
 		FileConfiguration data = Files.DATA.getFile();
-		String seller = data.getString("Items." + ID + ".Seller");
+		String seller = Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + ID + ".Seller"))).getName();
 		String topbidder = data.getString("Items." + ID + ".TopBidder");
 		ItemStack item = data.getItemStack("Items." + ID + ".Item");
 		List<String> lore = new ArrayList<>();
@@ -623,7 +637,7 @@ public class GUI implements Listener {
 														Player S = Methods.getPlayer(seller);
 														S.sendMessage(Messages.ADMIN_FORCE_CANCELLED_TO_PLAYER.getMessage());
 													}
-													data.set("OutOfTime/Cancelled." + num + ".Seller", data.getString("Items." + i + ".Seller"));
+													data.set("OutOfTime/Cancelled." + num + ".Seller", seller);
 													data.set("OutOfTime/Cancelled." + num + ".Full-Time", data.getLong("Items." + i + ".Full-Time"));
 													data.set("OutOfTime/Cancelled." + num + ".StoreID", data.getInt("Items." + i + ".StoreID"));
 													data.set("OutOfTime/Cancelled." + num + ".Item", data.getItemStack("Items." + i + ".Item"));
@@ -636,7 +650,7 @@ public class GUI implements Listener {
 													return;
 												}
 											}
-											if(data.getString("Items." + i + ".Seller").equalsIgnoreCase(player.getName())) {
+											if(data.getString("Items." + i + ".Seller").equalsIgnoreCase(player.getUniqueId().toString())) {
 												String it = config.getString("Settings.GUISettings.OtherSettings.Your-Item.Item");
 												String name = config.getString("Settings.GUISettings.OtherSettings.Your-Item.Name");
 												ItemStack I;
@@ -713,7 +727,7 @@ public class GUI implements Listener {
 								if(item.getItemMeta().getDisplayName().equals(Methods.color(config.getString("Settings.GUISettings.OtherSettings.Confirm.Name")))) {
 									String ID = IDs.get(player);
 									long cost = data.getLong("Items." + ID + ".Price");
-									String seller = data.getString("Items." + ID + ".Seller");
+									String seller = Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + ID + ".Seller"))).getName();
 									if(!data.contains("Items." + ID)) {
 										playClick(player);
 										openShop(player, Type.get(player), Cat.get(player), 1);
@@ -837,7 +851,7 @@ public class GUI implements Listener {
 									int page = Integer.parseInt(inv.getName().split("#")[1]);
 									if(data.contains("OutOfTime/Cancelled")) {
 										for(String i : data.getConfigurationSection("OutOfTime/Cancelled").getKeys(false)) {
-											if(data.getString("OutOfTime/Cancelled." + i + ".Seller").equalsIgnoreCase(player.getName())) {
+											if(data.getString("OutOfTime/Cancelled." + i + ".Seller").equalsIgnoreCase(player.getUniqueId().toString())) {
 												if(Methods.isInvFull(player)) {
 													player.sendMessage(Messages.INVENTORY_FULL.getMessage());
 													break;

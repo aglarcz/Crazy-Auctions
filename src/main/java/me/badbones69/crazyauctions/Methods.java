@@ -1,25 +1,37 @@
 package me.badbones69.crazyauctions;
 
-import me.badbones69.crazyauctions.api.FileManager;
-import me.badbones69.crazyauctions.api.FileManager.Files;
-import me.badbones69.crazyauctions.api.Messages;
-import me.badbones69.crazyauctions.api.events.AuctionWinBidEvent;
-import me.badbones69.crazyauctions.currency.CurrencyManager;
-import org.bukkit.*;
+import java.text.NumberFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
 
-import java.text.NumberFormat;
-import java.util.*;
+import me.badbones69.crazyauctions.api.FileManager;
+import me.badbones69.crazyauctions.api.FileManager.Files;
+import me.badbones69.crazyauctions.api.Messages;
+import me.badbones69.crazyauctions.api.events.AuctionWinBidEvent;
+import me.badbones69.crazyauctions.currency.CurrencyManager;
 
 public class Methods {
 	
 	public static Plugin plugin = Bukkit.getServer().getPluginManager().getPlugin("CrazyAuctions");
+	@SuppressWarnings("unused")
 	private static FileManager fileManager = FileManager.getInstance();
 	
 	public static String color(String msg) {
@@ -48,9 +60,11 @@ public class Methods {
 		Material m = Material.matchMaterial(type);
 		ItemStack item;
 		try {
-			item = new ItemStack(m, amount, (short) ty);
+			item = new ItemStack(m, amount);
+			((Damageable) item.getItemMeta()).setDamage(ty);
 		}catch(Exception e) {
-			item = new ItemStack(Material.STAINED_CLAY, 1, (short) 14);
+			item = new ItemStack(Material.LEGACY_STAINED_CLAY, 1);
+			((Damageable) item.getItemMeta()).setDamage(14);
 		}
 		return item;
 	}
@@ -65,9 +79,11 @@ public class Methods {
 		Material m = Material.matchMaterial(type);
 		ItemStack item;
 		try {
-			item = new ItemStack(m, amount, (short) ty);
+			item = new ItemStack(m, amount);
+			((Damageable) item.getItemMeta()).setDamage(ty);
 		}catch(Exception e) {
-			item = new ItemStack(Material.STAINED_CLAY, 1, (short) 14);
+			item = new ItemStack(Material.LEGACY_STAINED_CLAY, 1);
+			((Damageable) item.getItemMeta()).setDamage(14);
 		}
 		ItemMeta me = item.getItemMeta();
 		me.setDisplayName(color(name));
@@ -86,9 +102,11 @@ public class Methods {
 		Material m = Material.matchMaterial(type);
 		ItemStack item;
 		try {
-			item = new ItemStack(m, amount, (short) ty);
+			item = new ItemStack(m, amount);
+			((Damageable) item.getItemMeta()).setDamage(ty);
 		}catch(Exception e) {
-			item = new ItemStack(Material.STAINED_CLAY, 1, (short) 14);
+			item = new ItemStack(Material.LEGACY_STAINED_CLAY, 1);
+			((Damageable) item.getItemMeta()).setDamage(14);
 		}
 		ItemMeta me = item.getItemMeta();
 		me.setDisplayName(color(name));
@@ -361,7 +379,7 @@ public class Methods {
 					for(; data.contains("OutOfTime/Cancelled." + num); num++) ;
 					if(data.getBoolean("Items." + i + ".Biddable") && !data.getString("Items." + i + ".TopBidder").equalsIgnoreCase("None") && CurrencyManager.getMoney(Methods.getPlayer(data.getString("Items." + i + ".TopBidder"))) >= data.getInt("Items." + i + ".Price")) {
 						String winner = data.getString("Items." + i + ".TopBidder");
-						String seller = data.getString("Items." + i + ".Seller");
+						String seller = Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName();
 						Long price = data.getLong("Items." + i + ".Price");
 						CurrencyManager.addMoney(Methods.getOfflinePlayer(seller), price);
 						CurrencyManager.removeMoney(Methods.getOfflinePlayer(winner), price);
@@ -382,12 +400,12 @@ public class Methods {
 						data.set("OutOfTime/Cancelled." + num + ".StoreID", data.getInt("Items." + i + ".StoreID"));
 						data.set("OutOfTime/Cancelled." + num + ".Item", data.getItemStack("Items." + i + ".Item"));
 					}else {
-						String seller = data.getString("Items." + i + ".Seller");
+						String seller = Bukkit.getOfflinePlayer(UUID.fromString(data.getString("Items." + i + ".Seller"))).getName();
 						if(Methods.isOnline(seller)) {
 							Player player = Methods.getPlayer(seller);
 							player.sendMessage(Messages.ITEM_HAS_EXPIRED.getMessage());
 						}
-						data.set("OutOfTime/Cancelled." + num + ".Seller", data.getString("Items." + i + ".Seller"));
+						data.set("OutOfTime/Cancelled." + num + ".Seller", seller);
 						data.set("OutOfTime/Cancelled." + num + ".Full-Time", fullExpireTime.getTimeInMillis());
 						data.set("OutOfTime/Cancelled." + num + ".StoreID", data.getInt("Items." + i + ".StoreID"));
 						data.set("OutOfTime/Cancelled." + num + ".Item", data.getItemStack("Items." + i + ".Item"));

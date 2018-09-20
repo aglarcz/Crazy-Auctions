@@ -1,6 +1,5 @@
 package me.badbones69.crazyauctions;
 
-import com.massivestats.MassiveStats;
 import me.badbones69.crazyauctions.api.*;
 import me.badbones69.crazyauctions.api.FileManager.Files;
 import me.badbones69.crazyauctions.api.events.AuctionListEvent;
@@ -40,10 +39,6 @@ public class Main extends JavaPlugin implements Listener {
 		startCheck();
 		if(!Vault.setupEconomy()) {
 			saveDefaultConfig();
-		}
-		try {
-			new MassiveStats(this);
-		}catch(Exception e) {
 		}
 		Messages.addMissingMessages();
 	}
